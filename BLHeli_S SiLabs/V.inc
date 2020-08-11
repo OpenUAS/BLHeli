@@ -46,63 +46,7 @@ ENDIF
 ;**** **** **** **** ****
 ; Constant definitions
 ;**** **** **** **** ****
-IF MCU_48MHZ == 0
-CSEG AT 1A40h
-IF FETON_DELAY == 0
-Eep_ESC_Layout:		DB	"#V_L_00#        "	; ESC layout tag
-ELSEIF FETON_DELAY == 5
-Eep_ESC_Layout:		DB	"#V_L_05#        "
-ELSEIF FETON_DELAY == 10
-Eep_ESC_Layout:		DB	"#V_L_10#        "
-ELSEIF FETON_DELAY == 15
-Eep_ESC_Layout:		DB	"#V_L_15#        "
-ELSEIF FETON_DELAY == 20
-Eep_ESC_Layout:		DB	"#V_L_20#        "
-ELSEIF FETON_DELAY == 25
-Eep_ESC_Layout:		DB	"#V_L_25#        "
-ELSEIF FETON_DELAY == 30
-Eep_ESC_Layout:		DB	"#V_L_30#        "
-ELSEIF FETON_DELAY == 40
-Eep_ESC_Layout:		DB	"#V_L_40#        "
-ELSEIF FETON_DELAY == 50
-Eep_ESC_Layout:		DB	"#V_L_50#        "
-ELSEIF FETON_DELAY == 70
-Eep_ESC_Layout:		DB	"#V_L_70#        "
-ELSEIF FETON_DELAY == 90
-Eep_ESC_Layout:		DB	"#V_L_90#        "
-ENDIF
-CSEG AT 1A50h
-Eep_ESC_MCU:			DB	"#BLHELI$EFM8B10#"	; Project and MCU tag (16 Bytes)
-
-ELSE
-
-CSEG AT 1A40h
-IF FETON_DELAY == 0
-Eep_ESC_Layout:		DB	"#V_H_00#        "	; ESC layout tag
-ELSEIF FETON_DELAY == 5
-Eep_ESC_Layout:		DB	"#V_H_05#        "
-ELSEIF FETON_DELAY == 10
-Eep_ESC_Layout:		DB	"#V_H_10#        "
-ELSEIF FETON_DELAY == 15
-Eep_ESC_Layout:		DB	"#V_H_15#        "
-ELSEIF FETON_DELAY == 20
-Eep_ESC_Layout:		DB	"#V_H_20#        "
-ELSEIF FETON_DELAY == 25
-Eep_ESC_Layout:		DB	"#V_H_25#        "
-ELSEIF FETON_DELAY == 30
-Eep_ESC_Layout:		DB	"#V_H_30#        "
-ELSEIF FETON_DELAY == 40
-Eep_ESC_Layout:		DB	"#V_H_40#        "
-ELSEIF FETON_DELAY == 50
-Eep_ESC_Layout:		DB	"#V_H_50#        "
-ELSEIF FETON_DELAY == 70
-Eep_ESC_Layout:		DB	"#V_H_70#        "
-ELSEIF FETON_DELAY == 90
-Eep_ESC_Layout:		DB	"#V_H_90#        "
-ENDIF
-CSEG AT 1A50h
-Eep_ESC_MCU:			DB	"#BLHELI$EFM8B21#"	; Project and MCU tag (16 Bytes)
-ENDIF
+$include (layoutTag.inc)	; defines Eep_ESC_Layout and Eep_ESC_MCU tags
 
 TEMP_LIMIT			EQU 	49	; Temperature measurement ADC value for which main motor power is limited at 80degC (low byte, assuming high byte is 1)
 TEMP_LIMIT_STEP		EQU	9	; Temperature measurement ADC value increment for another 10degC
@@ -267,36 +211,16 @@ ELSE
 	mov	PCA0CPM0, #42h				; Enable comparator of module, set pwm mode
 ENDIF
 ENDM
-Set_Power_Pwm_Regs MACRO
-IF FETON_DELAY == 0
-	mov	PCA0CPL0, Power_Pwm_Reg_L
-	mov	PCA0CPH0, Power_Pwm_Reg_H
-ELSE
-	clr	C
-	mov	A, Power_Pwm_Reg_H
-	rrc	A
-	mov	Temp1, A
-	mov	A, Power_Pwm_Reg_L
-	rrc	A
-	mov	PCA0CPL1, A
-	mov	PCA0CPH1, Temp1
-ENDIF
+
+Set_Power_Pwm_Regs MACRO byteL, byteH
+	mov	PCA0CPL1, byteL
+	mov	PCA0CPH1, byteH
 ENDM		
-Set_Damp_Pwm_Regs MACRO
-IF FETON_DELAY == 0
-	mov	PCA0CPL1, Damp_Pwm_Reg_L
-	mov	PCA0CPH1, Damp_Pwm_Reg_H
-ELSE
-	clr	C
-	mov	A, Damp_Pwm_Reg_H
-	rrc	A
-	mov	Temp1, A
-	mov	A, Damp_Pwm_Reg_L
-	rrc	A
-	mov	PCA0CPL0, A
-	mov	PCA0CPH0, Temp1
-ENDIF
-ENDM		
+Set_Damp_Pwm_Regs MACRO byteL, byteH
+	mov	PCA0CPL0, byteL
+	mov	PCA0CPH0, byteH
+ENDM
+
 Clear_COVF_Interrupt MACRO
 	anl	PCA0PWM, #0DFh
 ENDM
